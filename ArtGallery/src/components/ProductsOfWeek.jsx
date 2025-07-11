@@ -15,7 +15,15 @@ const ProductsOfWeek = () => {
     const fetchTopProducts = async () => {
       try {
         setLoading(true);
+        console.log('Fetching top products...');
         const data = await fetchJson("/analytics/top-products");
+        console.log('Received products:', data);
+        if (!Array.isArray(data)) {
+          throw new Error('Expected an array of products, got: ' + typeof data);
+        }
+        if (data.length === 0) {
+          console.log('No products returned from API');
+        }
         setProducts(data);
       } catch (err) {
         setError("Failed to load top products. Please try again later.");

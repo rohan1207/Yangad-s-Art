@@ -3,20 +3,69 @@ import Product from '../models/Product.js';
 
 export const getTopProducts = async (req, res) => {
   try {
-    // Try to get top products based on order count and view count
-    const topProducts = await Product.find({
-      isActive: true,
-      quantity: { $gt: 0 }
-    })
-    .select('_id name description mainImage mrpPrice discount')
-    .sort({ orderCount: -1, viewCount: -1 })
-    .limit(5);
+    // First, aggregate orders to find most purchased products
+    const topProductsByOrders = await Order.aggregate([
+      // Unwind the items array to work with individual items
+      { $unwind: "$items" },
+      
+      // Group by product ID and count number of orders
+      {
+        $group: {
+          _id: "$items.product",
+          orderCount: { $sum: 1 },  // Count number of orders for each product
+          totalQuantity: { $sum: "$items.quantity" }  // Sum total quantities ordered
+        }
+      },
+      
+      // Sort by order count (number of times ordered) in descending order
+      { $sort: { orderCount: -1 } },
+      
+      // Limit to top 5 products
+      { $limit: 5 },
+      
+      // Lookup product details
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "productDetails"
+        }
+      },
+      
+      // Unwind the productDetails array
+      { $unwind: "$productDetails" },
+      
+      // Only get products that are active and in stock
+      {
+        $match: {
+          "productDetails.isActive": true,
+          "productDetails.quantity": { $gt: 0 }
+        }
+      },
+      
+      // Project only needed fields
+      {
+        $project: {
+          _id: "$productDetails._id",
+          name: "$productDetails.name",
+          description: "$productDetails.description",
+          mainImage: "$productDetails.mainImage",
+          mrpPrice: "$productDetails.mrpPrice",
+          discount: "$productDetails.discount",
+          orderCount: 1,
+          totalQuantity: 1
+        }
+      }
+    ]);
 
-    if (topProducts.length > 0) {
-      return res.json(topProducts);
+    console.log('Top products by orders:', topProductsByOrders);
+
+    if (topProductsByOrders.length > 0) {
+      return res.json(topProductsByOrders);
     }
 
-    // If no products with orders/views found, return newest products
+    // If no products with orders found, return newest products
     const newProducts = await Product.find({
       isActive: true,
       quantity: { $gt: 0 }
@@ -25,11 +74,7 @@ export const getTopProducts = async (req, res) => {
     .sort({ createdAt: -1 })
     .limit(5);
 
-    // If still no products found, return empty array
-    if (!newProducts.length) {
-      return res.json([]);
-    }
-
+    console.log('Sending new products:', newProducts);
     res.json(newProducts);
   } catch (error) {
     console.error('Error in getTopProducts:', error);
