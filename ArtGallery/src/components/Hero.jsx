@@ -5,10 +5,17 @@ const Hero = () => {
     <div className="relative max-h-[100vh] w-full overflow-hidden ">
       {/* Full-screen background image with overlay */}
       <div className="absolute inset-0 z-0">
+        {/* Mobile image (hidden on md and larger screens) */}
+        <img
+          src="./hero1.png"
+          alt="Background"
+          className="md:hidden w-full h-full object-cover object-center opacity-100"
+        />
+        {/* Desktop/Tablet image (hidden on smaller screens) */}
         <img
           src="./newHero.png"
           alt="Background"
-          className="w-full h-full object-cover object-center opacity-100 "
+          className="hidden md:block w-full h-full object-cover object-center opacity-100"
         />
         <div className="" />
       </div>
@@ -96,8 +103,6 @@ const Hero = () => {
           </motion.div>
         </div>
       </div>
-
-      
     </div>
   );
 };
