@@ -1,0 +1,24 @@
+# Root .gitignore for YangArt
+
+# Node modules
+**/node_modules/
+**/dist/
+
+# Env files
+**/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Optional: OS-specific
+.idea/
+*.swp
+*.swo
