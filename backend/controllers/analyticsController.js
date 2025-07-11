@@ -3,17 +3,42 @@ import Product from '../models/Product.js';
 
 export const getTopProducts = async (req, res) => {
   try {
+    // First, check if we have any orders
+    const orderCount = await Order.countDocuments();
+    console.log(`Total orders in database: ${orderCount}`);
+
+    // Get all orders for debugging
+    const allOrders = await Order.find().lean();
+    console.log('Sample order structure:', JSON.stringify(allOrders[0], null, 2));
+
     // First, aggregate orders to find most purchased products
     const topProductsByOrders = await Order.aggregate([
       // Unwind the items array to work with individual items
       { $unwind: "$items" },
       
+      // Only include completed orders
+      {
+        $match: {
+          "orderStatus": { $in: ["confirmed", "processing", "shipped", "delivered"] }
+        }
+      },
+
       // Group by product ID and count number of orders
       {
         $group: {
           _id: "$items.product",
           orderCount: { $sum: 1 },  // Count number of orders for each product
-          totalQuantity: { $sum: "$items.quantity" }  // Sum total quantities ordered
+          totalQuantity: { $sum: "$items.qty" }  // Sum total quantities ordered (using qty instead of quantity)
+        }
+      },
+
+      // Debug stage to log grouped data
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "debug_product"
         }
       },
       
@@ -59,7 +84,11 @@ export const getTopProducts = async (req, res) => {
       }
     ]);
 
-    console.log('Top products by orders:', topProductsByOrders);
+    console.log('Aggregation result:', JSON.stringify(topProductsByOrders, null, 2));
+
+    // If we got no results from aggregation, let's check if products exist
+    const productCount = await Product.countDocuments();
+    console.log(`Total products in database: ${productCount}`);
 
     if (topProductsByOrders.length > 0) {
       return res.json(topProductsByOrders);
