@@ -1,5 +1,5 @@
 // Shared API helper for ArtGallery frontend (customer-facing site)
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+export const API_BASE = import.meta.env.VITE_API_URL || 'https://yangart-api.onrender.com/api';
 
 export const fetchJson = async (endpoint, options = {}) => {
   const token = localStorage.getItem('userToken');

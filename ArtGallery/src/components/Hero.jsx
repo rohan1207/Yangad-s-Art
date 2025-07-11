@@ -6,7 +6,7 @@ const Hero = () => {
       {/* Full-screen background image with overlay */}
       <div className="absolute inset-0 z-0">
         <img
-          src="./hero1.png"
+          src="./newHero.png"
           alt="Background"
           className="w-full h-full object-cover object-center opacity-100 "
         />
