@@ -22,8 +22,11 @@ const app = express();
 const corsOptions = {
   origin: [
     'http://localhost:5174',    // Local development
-    'http://localhost:5173',    // Alternative local port
-    'https://yangart-api.onrender.com',  // Production frontend (update this with your actual domain)
+    'http://localhost:5173',
+      // Alternative local port  
+            // Alternative local port
+    'https://yangad-s-art-gallery.onrender.com',  // Production frontend
+           
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
