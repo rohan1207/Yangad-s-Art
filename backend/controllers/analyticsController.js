@@ -1,5 +1,6 @@
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
+import mongoose from 'mongoose';
 
 export const getTopProducts = async (req, res) => {
   try {
@@ -10,6 +11,10 @@ export const getTopProducts = async (req, res) => {
     // Get all orders for debugging
     const allOrders = await Order.find().lean();
     console.log('Sample order structure:', JSON.stringify(allOrders[0], null, 2));
+
+    // Log the names of all collections in the database
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    console.log('Available collections:', collections.map(c => c.name));
 
     // First, aggregate orders to find most purchased products
     const topProductsByOrders = await Order.aggregate([
@@ -48,13 +53,34 @@ export const getTopProducts = async (req, res) => {
       // Limit to top 5 products
       { $limit: 5 },
       
+      // Log the grouped results before lookup
+      {
+        $project: {
+          _id: 1,
+          orderCount: 1,
+          totalQuantity: 1,
+          debug: "Before product lookup"
+        }
+      },
+
       // Lookup product details
       {
         $lookup: {
-          from: "products",
+          from: "products", // This should match your actual collection name
           localField: "_id",
           foreignField: "_id",
           as: "product"
+        }
+      },
+
+      // Log the results after lookup
+      {
+        $project: {
+          _id: 1,
+          orderCount: 1,
+          totalQuantity: 1,
+          productArray: "$product",
+          debug: "After product lookup"
         }
       },
       
@@ -85,6 +111,18 @@ export const getTopProducts = async (req, res) => {
     ]);
 
     console.log('Aggregation result:', JSON.stringify(topProductsByOrders, null, 2));
+
+    // Debug: Check collection names and document counts
+    const orderCollection = mongoose.model('Order').collection.collectionName;
+    const productCollection = mongoose.model('Product').collection.collectionName;
+    console.log('Collection names:', {
+      orderCollection,
+      productCollection
+    });
+
+    // Debug: Check a sample order's items structure
+    const sampleOrder = await Order.findOne({ orderStatus: "confirmed" });
+    console.log('Sample confirmed order:', JSON.stringify(sampleOrder, null, 2));
 
     // If we got no results from aggregation, let's check if products exist
     const productCount = await Product.countDocuments();
