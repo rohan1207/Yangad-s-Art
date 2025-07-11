@@ -1,65 +1,32 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { fetchJson } from "../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
-
-const products = [
-  {
-    id: 1,
-    name: "Hold me still",
-    description:
-      "Hand-poured soy wax candle with calming lavender essence. Each candle is carefully crafted to provide a serene and relaxing ambiance, perfect for your sacred space.",
-    price: "$24.99",
-    image: "/hold_me_still.jpg",
-    tag: "Best Seller",
-    details: [
-      "100% Natural Soy Wax",
-      "40+ Hours Burn Time",
-      "Handcrafted in Small Batches",
-    ],
-  },
-  {
-    id: 2,
-    name: "Sunflower Candle",
-    description:
-      "Hand-poured soy wax candle infused with the bright and cheerful scent of sunflowers. Each candle is designed to uplift your spirits and bring warmth to your space.",
-    price: "$49.99",
-    image: "/sunflower_candle.jpg",
-    tag: "New Arrival",
-    details: [
-      "925 Sterling Silver",
-      "Crystal Accent",
-      "Customizable Engraving",
-    ],
-  },
-  {
-    id: 3,
-    name: "Oh! Rose",
-    description:
-      "Hand-crocheted merino wool shawl in ivory. Each stitch is carefully crafted with love, creating a luxurious wrap that provides both warmth and elegance.",
-    price: "$79.99",
-    image: "/rose_candle.jpg",
-    tag: "Limited Edition",
-    details: ["100% Merino Wool", "Hand-Crocheted", "One-of-a-Kind Design"],
-  },
-  {
-    id: 4,
-    name: "Name and Photo Engraved unisex necklace.",
-    description:
-      "Personalized unisex necklace featuring your name and photo. A unique piece that adds a personal touch to any outfit.",
-    price: "$29.99",
-    image: "/jewellery.webp",
-    tag: "Featured",
-    details: [
-      "Premium Coconut Blend",
-      "50+ Hours Burn Time",
-      "Reusable Glass Vessel",
-    ],
-  },
-];
+import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 
 const ProductsOfWeek = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  // Fetch top products
+  useEffect(() => {
+    const fetchTopProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchJson("/analytics/top-products");
+        setProducts(data);
+      } catch (err) {
+        setError("Failed to load top products. Please try again later.");
+        console.error("API Error:", err.message || err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTopProducts();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -71,189 +38,147 @@ const ProductsOfWeek = () => {
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % products.length);
-  }, []);
+  }, [products.length]);
 
   const prevSlide = useCallback(() => {
-    setCurrentIndex(
-      (prevIndex) => (prevIndex - 1 + products.length) % products.length
+    setCurrentIndex((prevIndex) =>
+      prevIndex === 0 ? products.length - 1 : prevIndex - 1
     );
-  }, []);
+  }, [products.length]);
 
+  // Auto-advance slides
   useEffect(() => {
-    const timer = setInterval(nextSlide, 4000);
+    if (!isMobile) return;
+    const timer = setInterval(nextSlide, 5000);
     return () => clearInterval(timer);
-  }, [nextSlide]);
+  }, [nextSlide, isMobile]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[500px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[500px] flex items-center justify-center text-gray-500">
+        {error}
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return null;
+  }
 
   const currentProduct = products[currentIndex];
 
   return (
-    <div className="w-full bg-gradient-to-b from-amber-50 to-white py-24">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl md:text-4xl font-serif font-light text-gray-900 mb-4"
-          >
-            Product of the{" "}
-            <span className="text-amber-600 font-medium">Week</span>
-          </motion.h2>
-          <motion.div
-            initial={{ opacity: 0, scaleX: 0 }}
-            whileInView={{ opacity: 1, scaleX: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="w-24 h-0.5 bg-amber-400 mx-auto"
-          />
+    <section className="py-16 bg-gradient-to-b from-amber-50/50 to-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-serif font-light text-gray-900">
+            Most Popular Products
+          </h2>
+          <p className="mt-4 text-gray-500">
+            Discover our customer favorites and bestsellers
+          </p>
         </div>
 
-        {/* Product Display */}
         <div className="relative">
+          {/* Navigation Arrows */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 text-gray-800 hover:bg-amber-100 transition-colors"
+          >
+            <IoChevronBack className="w-6 h-6" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 text-gray-800 hover:bg-amber-100 transition-colors"
+          >
+            <IoChevronForward className="w-6 h-6" />
+          </button>
+
+          {/* Product Display */}
           <AnimatePresence mode="wait">
-            <div className="relative overflow-hidden rounded-2xl bg-white shadow-xl">
-              <motion.div
-                key={currentProduct.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col md:flex-row"
-              >
-                {/* Image Section */}
-                <motion.div
-                  className="md:w-1/2 relative h-[300px] md:h-[600px] overflow-hidden"
-                  initial={{ x: -100, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <div className="absolute inset-0">
-                    <img
-                      src={currentProduct.image}
-                      alt={currentProduct.name}
-                      className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10" />
-                  </div>
-
-                  {/* Product Tag */}
-                  <motion.div
-                    initial={{ x: -50, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="absolute top-6 left-6"
-                  >
-                    <div className="bg-amber-500 text-white text-sm font-medium px-4 py-2 rounded-full shadow-lg">
-                      {currentProduct.tag}
-                    </div>
-                  </motion.div>
-                </motion.div>
-
-                {/* Content Section */}
-                <motion.div
-                  className="md:w-1/2 p-8 md:p-16 flex flex-col justify-center bg-white"
-                  initial={{ x: 100, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <motion.h3
-                    className="text-3xl md:text-4xl font-serif font-light text-gray-900 mb-4"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    {currentProduct.name}
-                  </motion.h3>
-
-                  <motion.p
-                    className="text-gray-600 text-lg mb-8 leading-relaxed"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    {currentProduct.description}
-                  </motion.p>
-
-                  {/* Product Details */}
-                  <motion.div
-                    className="space-y-3 mb-8"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    {currentProduct.details.map((detail, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center text-gray-600"
-                      >
-                        <span className="w-2 h-2 bg-amber-400 rounded-full mr-3"></span>
-                        {detail}
-                      </div>
-                    ))}
-                  </motion.div>
-
-                  <motion.div
-                    className="flex flex-col sm:flex-row items-center gap-4 mt-auto"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <span className="text-2xl font-light text-amber-600">
-                      {currentProduct.price}
-                    </span>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-8 py-3 bg-amber-500 text-white rounded-full hover:bg-amber-400 transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-amber-200"
-                    >
-                      Add to Cart
-                    </motion.button>
-                  </motion.div>
-                </motion.div>
-              </motion.div>
-
-              {/* Navigation Arrows */}
-              <div className="absolute top-[50%] -translate-y-1/2 left-0 right-0">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                  <motion.button
-                    whileHover={{ scale: 1.1, x: 5 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={prevSlide}
-                    className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg text-amber-600 hover:bg-amber-50 transition-all transform -translate-x-6"
-                  >
-                    <IoChevronBackOutline className="w-6 h-6" />
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.1, x: -5 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={nextSlide}
-                    className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-lg text-amber-600 hover:bg-amber-50 transition-all transform translate-x-6"
-                  >
-                    <IoChevronForwardOutline className="w-6 h-6" />
-                  </motion.button>
-                </div>
+            <motion.div
+              key={currentProduct._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="grid md:grid-cols-2 gap-8 items-center"
+            >
+              {/* Product Image */}
+              <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
+                <img
+                  src={currentProduct.mainImage}
+                  alt={currentProduct.name}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
+
+              {/* Product Info */}
+              <div className="text-center md:text-left space-y-6">
+                <div>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-sm font-medium mb-4"
+                  >
+                    Best Seller #{currentIndex + 1}
+                  </motion.div>
+                  <h3 className="text-2xl font-medium text-gray-900">
+                    {currentProduct.name}
+                  </h3>
+                </div>
+
+                <p className="text-gray-600 leading-relaxed">
+                  {currentProduct.description}
+                </p>
+
+                <div className="flex flex-col md:flex-row gap-4 md:items-center justify-center md:justify-start">
+                  <div className="text-2xl font-medium text-amber-600">
+                    ₹{currentProduct.mrpPrice}
+                    {currentProduct.discount > 0 && (
+                      <span className="ml-2 text-sm text-green-600">
+                        {currentProduct.discount}% OFF
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <button className="px-8 py-3 bg-amber-600 text-white rounded-full hover:bg-amber-500 transition-colors w-full md:w-auto">
+                    View Details
+                  </button>
+                </motion.div>
+              </div>
+            </motion.div>
           </AnimatePresence>
 
-          {/* Progress Dots */}
-          <div className="flex justify-center gap-3 mt-8">
+          {/* Dots Navigation */}
+          <div className="flex justify-center gap-2 mt-8">
             {products.map((_, index) => (
-              <motion.div
+              <button
                 key={index}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className={`h-2 transition-all duration-300 rounded-full ${
+                onClick={() => setCurrentIndex(index)}
+                className={`w-2 h-2 rounded-full transition-colors ${
                   index === currentIndex
-                    ? "w-8 bg-amber-400"
-                    : "w-2 bg-amber-200 hover:bg-amber-300"
+                    ? "bg-amber-600"
+                    : "bg-gray-300 hover:bg-amber-300"
                 }`}
               />
             ))}
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

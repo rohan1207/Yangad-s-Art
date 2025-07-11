@@ -7,6 +7,8 @@ export const fetchJson = async (endpoint, options = {}) => {
   if (token) baseHeaders['Authorization'] = `Bearer ${token}`;
   const res = await fetch(`${API_BASE}${endpoint}`, {
     headers: { ...baseHeaders, ...(options.headers || {}) },
+    mode: 'cors',
+    credentials: 'include',
     ...options,
   });
   if (!res.ok) {
