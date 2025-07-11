@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import offerRoutes from './routes/offerRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 import connectDB from './config/db.js';
 
 // Load env vars
@@ -23,6 +24,7 @@ const corsOptions = {
   origin: [
     'http://localhost:5174',    // Local development
     'http://localhost:5173',
+    'http://localhost:5175',    // Alternative local port
       // Alternative local port  
             // Alternative local port
     'https://yangad-s-art-gallery.onrender.com',  // Production frontend
@@ -43,6 +45,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

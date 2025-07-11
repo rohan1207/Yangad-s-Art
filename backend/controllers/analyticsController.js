@@ -1,33 +1,36 @@
-import Order from '../models/Order.js';
-import Product from '../models/Product.js';
+import Order from '../models/orderModel.js';
+import Product from '../models/productModel.js';
 
 export const getTopProducts = async (req, res) => {
   try {
-    // Aggregate orders to get product counts
-    const topProducts = await Order.aggregate([
-      // Unwind the items array to work with individual items
-      { $unwind: '$items' },
-      
-      // Group by product ID and sum quantities
-      {
-        $group: {
-          _id: '$items.product',
-          totalOrders: { $sum: '$items.qty' }
-        }
-      },
-      
-      // Sort by total orders in descending order
-      { $sort: { totalOrders: -1 } },
-      
-      // Limit to top 7 products
-      { $limit: 7 },
-      
-      // Lookup product details
-      {
-        $lookup: {
-          from: 'products',
-          localField: '_id',
-          foreignField: '_id',
+    // First try to get products with orders
+    const productsWithOrders = await Product.find({
+      isActive: true,
+      quantity: { $gt: 0 }
+    })
+    .select('name description mainImage mrpPrice discount')
+    .sort({ orderCount: -1, viewCount: -1 })
+    .limit(5);
+
+    if (productsWithOrders.length > 0) {
+      return res.json(productsWithOrders);
+    }
+
+    // If no products with orders found, return newest products
+    const newProducts = await Product.find({
+      isActive: true,
+      quantity: { $gt: 0 }
+    })
+    .select('name description mainImage mrpPrice discount')
+    .sort({ createdAt: -1 })
+    .limit(5);
+
+    res.json(newProducts);
+  } catch (error) {
+    console.error('Error in getTopProducts:', error);
+    res.status(500).json({ message: 'Failed to fetch top products' });
+  }
+};
           as: 'productDetails'
         }
       },
