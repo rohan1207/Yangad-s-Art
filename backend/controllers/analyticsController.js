@@ -13,32 +13,32 @@ export const getTopProducts = async (req, res) => {
 
     // First, aggregate orders to find most purchased products
     const topProductsByOrders = await Order.aggregate([
-      // Unwind the items array to work with individual items
-      { $unwind: "$items" },
-      
-      // Only include completed orders
+      // First match only confirmed/completed orders
       {
         $match: {
-          "orderStatus": { $in: ["confirmed", "processing", "shipped", "delivered"] }
+          orderStatus: { $in: ["confirmed", "processing", "shipped", "delivered"] }
         }
       },
 
+      // Unwind the items array to work with individual items
+      { $unwind: "$items" },
+      
       // Group by product ID and count number of orders
       {
         $group: {
           _id: "$items.product",
           orderCount: { $sum: 1 },  // Count number of orders for each product
-          totalQuantity: { $sum: "$items.qty" }  // Sum total quantities ordered (using qty instead of quantity)
+          totalQuantity: { $sum: "$items.qty" }  // Sum total quantities ordered
         }
       },
 
-      // Debug stage to log grouped data
+      // Log intermediate results for debugging
       {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "debug_product"
+        $project: {
+          _id: 1,
+          orderCount: 1,
+          totalQuantity: 1,
+          debug: "After grouping"
         }
       },
       
@@ -54,30 +54,30 @@ export const getTopProducts = async (req, res) => {
           from: "products",
           localField: "_id",
           foreignField: "_id",
-          as: "productDetails"
+          as: "product"
         }
       },
       
-      // Unwind the productDetails array
-      { $unwind: "$productDetails" },
+      // Unwind the product array
+      { $unwind: "$product" },
       
       // Only get products that are active and in stock
       {
         $match: {
-          "productDetails.isActive": true,
-          "productDetails.quantity": { $gt: 0 }
+          "product.isActive": true,
+          "product.quantity": { $gt: 0 }
         }
       },
       
       // Project only needed fields
       {
         $project: {
-          _id: "$productDetails._id",
-          name: "$productDetails.name",
-          description: "$productDetails.description",
-          mainImage: "$productDetails.mainImage",
-          mrpPrice: "$productDetails.mrpPrice",
-          discount: "$productDetails.discount",
+          _id: "$product._id",
+          name: "$product.name",
+          description: "$product.description",
+          mainImage: "$product.mainImage",
+          mrpPrice: "$product.mrpPrice",
+          discount: "$product.discount",
           orderCount: 1,
           totalQuantity: 1
         }
