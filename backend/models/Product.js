@@ -33,6 +33,14 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    productOfWeek: {
+      type: Boolean,
+      default: false,
+    },
+    featured: {
+      type: Boolean,
+      default: false,
+    },
     colours: {
       type: [String],
       default: [],

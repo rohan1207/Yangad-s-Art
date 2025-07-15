@@ -11,7 +11,13 @@ export const createProduct = async (req, res) => {
       mrpPrice,
       discount,
       colours,
+      productOfWeek: productOfWeekRaw,
+      featured: featuredRaw,
     } = req.body;
+
+    // Convert checkbox/string values to booleans
+    const productOfWeek = productOfWeekRaw === 'true' || productOfWeekRaw === 'on' || productOfWeekRaw === '1' || productOfWeekRaw === true;
+    const featured = featuredRaw === 'true' || featuredRaw === 'on' || featuredRaw === '1' || featuredRaw === true;
 
     if (!req.files || !req.files.mainImage) {
       return res.status(400).json({ message: 'Main image is required' });
@@ -32,6 +38,8 @@ export const createProduct = async (req, res) => {
       mrpPrice: Number(mrpPrice),
       discount: Number(discount),
       colours,
+      productOfWeek,
+      featured,
     });
 
     const created = await product.save();
@@ -85,11 +93,20 @@ export const updateProduct = async (req, res) => {
       'description',
       'mrpPrice',
       'discount',
+      'productOfWeek',
+      'featured',
       'colours',
     ];
+    
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        product[field] = req.body[field];
+        if (field === 'productOfWeek' || field === 'featured') {
+          product[field] = req.body[field] === 'true' || req.body[field] === 'on' || req.body[field] === '1' || req.body[field] === true;
+        } else if (field === 'mrpPrice' || field === 'discount') {
+          product[field] = Number(req.body[field]);
+        } else {
+          product[field] = req.body[field];
+        }
       }
     });
 
