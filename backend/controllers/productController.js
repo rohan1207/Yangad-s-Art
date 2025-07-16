@@ -53,7 +53,14 @@ export const createProduct = async (req, res) => {
 // Get all products
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+        const filter = {};
+    if (req.query.productOfWeek !== undefined) {
+      filter.productOfWeek = req.query.productOfWeek === 'true' || req.query.productOfWeek === '1';
+    }
+    if (req.query.featured !== undefined) {
+      filter.featured = req.query.featured === 'true' || req.query.featured === '1';
+    }
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

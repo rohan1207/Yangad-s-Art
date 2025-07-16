@@ -1,23 +1,32 @@
-import { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useState } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const LoginPage = () => {
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await login(phone, password);
-      const dest = location.state?.from?.pathname || '/';
+      const dest = location.state?.from?.pathname || "/";
       navigate(dest, { replace: true });
     } catch (err) {
-      setError(err.message || 'Login failed');
+      // Check for user not found error (customize this if your backend uses a different message)
+      if (
+        err.message &&
+        (err.message.toLowerCase().includes("user not found") ||
+          err.message.toLowerCase().includes("no user"))
+      ) {
+        setError("User not found. Please sign up below.");
+      } else {
+        setError(err.message || "Login failed");
+      }
     }
   };
 
@@ -28,7 +37,22 @@ const LoginPage = () => {
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm space-y-4"
       >
         <h1 className="text-2xl font-semibold text-center">Login</h1>
-        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+        {error && (
+          <div className="text-red-500 text-sm text-center">
+            {error}
+            {error.toLowerCase().includes("user not found") && (
+              <div className="mt-2">
+                <Link
+                  to="/signup"
+                  state={location.state ? location.state : { from: location }}
+                  className="inline-block bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700"
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
         <input
           type="text"
           placeholder="Phone"
@@ -47,8 +71,12 @@ const LoginPage = () => {
           Login
         </button>
         <p className="text-sm text-center">
-          New user?{' '}
-          <Link to="/signup" className="text-amber-600">
+          New user?{" "}
+          <Link
+            to="/signup"
+            state={location.state ? location.state : { from: location }}
+            className="text-amber-600"
+          >
             Sign up
           </Link>
         </p>

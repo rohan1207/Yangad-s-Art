@@ -88,7 +88,18 @@ const ProductCategoryPage = ({
 
   const viewMore = () => setVisible((v) => Math.min(v + 4, filtered.length));
 
-  if (loading) return <div className="text-center py-20">Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex flex-col items-center justify-center py-20 min-h-[400px] mt-20">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-500 mb-6"></div>
+        <div className="text-2xl font-serif text-amber-600 mb-2">
+          Happiness is loading...
+        </div>
+        <div className="text-gray-500 text-lg">
+          Smile! Your art is on its way 😊
+        </div>
+      </div>
+    );
   if (error)
     return <div className="text-red-500 text-center py-20">{error}</div>;
 

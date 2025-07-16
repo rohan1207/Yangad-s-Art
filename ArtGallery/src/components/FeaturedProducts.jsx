@@ -1,105 +1,35 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { fetchJson } from "../utils/api";
 import { IoArrowForward } from "react-icons/io5";
-
-const products = [
-  {
-    id: 1,
-    name: "2 Chai Candle",
-    category: "Handcrafted Candles",
-    price: "₹200",
-    image:
-      "/2_chai_candle.png", // Replace with your local image path
-    description: "Artisanal soy candles with essential oil",
-  },
-  
-  {
-    id: 2,
-    name: "4 Iced Latte Candle",
-    category: "Handcrafted Candles",
-    price: "₹1250",
-    image:
-      "/iced_latte_candle.jpg", // Replace with your local image path
-    description: "Iced latte scented soy candle with a frosted finish",
-  },
-  {
-    id: 3,
-    name: "Chocolate Frappe Candle",
-    category: "Handcrafted Candles",
-    price: "₹450",
-    image:
-      "/chocolate_frappe_candle.jpg", // Replace with your local image path
-    description: "Chocolate-scented soy candle with a frosted finish",
-  },
-  {
-    id: 4,
-    name: "Customized Name Candles",
-    category: "Handcrafted Candles",
-    price: "₹350",
-    image:
-      "/customized_name_candle.jpg", // Replace with your local image path
-    description: "Customized name candles with personalized designs",
-  },
-  {
-    id: 5,
-    name: "Floating Sunflower Candle",
-    category: "Handcrafted Candles",
-    price: "₹250",
-    image:
-      "/sunflower_candle2.jpg", // Replace with your local image path
-    description: "Floating sunflower candle with a unique design",
-  },
-  {
-    id: 6,
-    name: "Iced Coffee Latte Candle",
-    category: "Handcrafted Candles",
-    price: "₹350",
-    image:
-      "/iced_coffee_candle.jpg", // Replace with your local image path
-    description: "Iced coffee latte scented soy candle with a frosted finish",
-  },
-  {
-    id: 7,
-    name: "Iced Lavender Latte",
-    category: "Handcrafted Candles",
-    price: "₹350",
-    image:
-      "/iced_lavender_latte.png", // Replace with your local image path
-    description: "Iced lavender latte scented soy candle with a frosted finish",
-  },
-  {
-    id: 8,
-    name: "Minimal Cross Jewellery",
-    category: "Jewellery",
-    price: "₹199",
-    image:"/jewellery.webp", // Replace with your local image path
-    description: "Minimal cross design in sterling silver",
-  },
-  {
-    id: 9,
-    name: "Resin Serving Tray",
-    category: "Resin Art",
-    price: "$79.99",
-    image:
-      "https://images.unsplash.com/photo-1615485290400-035c6335e131?auto=format&fit=crop&q=80&w=800",
-    description: "Decorative resin serving tray",
-  },
-  {
-    id: 10,
-    name: "Tulip Bouquet Candle",
-    category: "Handcrafted Candles",
-    price: "₹300",
-    image:
-      "tulip_bouquet_candle.webp", // Replace with your local image path
-    description: "Matching family t-shirt set",
-  },
-];
+import { Link } from "react-router-dom";
 
 const FeaturedProducts = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [visibleProducts, setVisibleProducts] = useState(4); // Changed to show 4 products by default (2x2 grid)
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 640);
 
+  // Fetch featured products once on mount
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchJson("/products?featured=true");
+        setProducts(data.filter((p) => p.featured === true));
+      } catch (err) {
+        setError("Failed to load featured products");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
+  // Handle window resize to adjust mobile/desktop layout
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 640;
@@ -107,11 +37,15 @@ const FeaturedProducts = () => {
       // Reset visible products when switching between mobile and desktop
       setVisibleProducts(mobile ? 4 : 6);
     };
-
     window.addEventListener("resize", handleResize);
-    handleResize(); // Initial check
+    handleResize(); // initial check
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Calculate discounted price
+  const calculateDiscountedPrice = (mrpPrice, discount) => {
+    return mrpPrice - (mrpPrice * discount) / 100;
+  };
 
   const categories = ["All", ...new Set(products.map((p) => p.category))];
 
@@ -123,7 +57,7 @@ const FeaturedProducts = () => {
   const handleViewMore = () => {
     // Add 2 products at a time (1 row) on mobile, 2 products on desktop
     setVisibleProducts((prev) =>
-      Math.min(prev + (isMobile ? 2 : 2), filteredProducts.length)
+      Math.min(prev + (isMobile ? 2 : 3), filteredProducts.length)
     );
   };
 
@@ -178,54 +112,79 @@ const FeaturedProducts = () => {
         >
           <AnimatePresence>
             {filteredProducts.slice(0, visibleProducts).map((product) => (
-              <motion.div
-                key={product.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.5 }}
-                className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300"
+              <Link
+                key={product._id || product.id}
+                to={`/product/${product._id || product.id}`}
               >
-                {/* Product Image */}
-                <div className="relative h-40 sm:h-64 overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.5 }}
+                  className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300"
+                >
+                  {/* Product Image */}
+                  <div className="relative h-40 sm:h-64 overflow-hidden">
+                    <img
+                      src={product.mainImage}
+                      alt={product.name}
+                      className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                  {/* Category Tag */}
-                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
-                    <span className="px-2 sm:px-3 py-1 bg-white/90 text-amber-600 text-[10px] sm:text-xs font-medium rounded-full">
-                      {product.category}
-                    </span>
-                  </div>
-                </div>
+                    {/* Category Tag */}
+                    <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
+                      <span className="px-2 sm:px-3 py-1 bg-white/90 text-amber-600 text-[10px] sm:text-xs font-medium rounded-full">
+                        {product.category}
+                      </span>
+                    </div>
 
-                {/* Product Info */}
-                <div className="p-3 sm:p-6">
-                  <h3 className="text-sm sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
-                    {product.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-4 line-clamp-2">
-                    {product.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm sm:text-lg font-light text-amber-600">
-                      {product.price}
-                    </span>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-50 text-amber-600 rounded-full text-xs sm:text-sm hover:bg-amber-100 transition-colors duration-300"
-                    >
-                      Shop Now
-                    </motion.button>
+                    {/* Discount Badge */}
+                    {product.discount > 0 && (
+                      <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+                        <span className="px-2 sm:px-3 py-1 bg-red-500 text-white text-[10px] sm:text-xs font-medium rounded-full">
+                          {product.discount}% OFF
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </motion.div>
+
+                  {/* Product Info */}
+                  <div className="p-3 sm:p-6">
+                    <h3 className="text-sm sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
+                      {product.name}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-4 line-clamp-2">
+                      {product.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                        <span className="text-sm sm:text-lg font-medium text-amber-600">
+                          ₹
+                          {calculateDiscountedPrice(
+                            product.mrpPrice,
+                            product.discount
+                          )}
+                        </span>
+                        {product.discount > 0 && (
+                          <span className="text-xs sm:text-sm text-gray-500 line-through">
+                            ₹{product.mrpPrice}
+                          </span>
+                        )}
+                      </div>
+                      <Link
+                        to={`/product/${product._id || product.id}`}
+                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-50 text-amber-600 rounded-full text-xs sm:text-sm hover:bg-amber-100 transition-colors duration-300 flex items-center justify-center"
+                        style={{ textDecoration: "none" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Shop Now
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              </Link>
             ))}
           </AnimatePresence>
         </motion.div>

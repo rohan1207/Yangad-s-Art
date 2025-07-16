@@ -51,6 +51,8 @@ const AddProduct = () => {
     mrpPrice: '',
     discount: 0,
     colours: '',
+    productOfWeek: false,
+    featured: false,
   });
   const [mainImage, setMainImage] = useState(null);
   const [additionalMedia, setAdditionalMedia] = useState([]);
@@ -60,13 +62,16 @@ const AddProduct = () => {
   const [alertType, setAlertType] = useState('success');
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'category') {
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setForm({ ...form, [name]: checked });
+    } else if (name === 'category') {
       setForm({ ...form, category: value, subcategory: categoryOptions[value][0] });
     } else {
       setForm({ ...form, [name]: value });
     }
   };
+
 
   const showSweetAlert = (type, message) => {
     setAlertType(type);
@@ -76,6 +81,8 @@ const AddProduct = () => {
       setShowAlert(false);
     }, 3000);
   };
+
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -87,7 +94,7 @@ const AddProduct = () => {
     
     try {
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`${process.env.REACT_APP_API_BASE || 'http://localhost:3001'}/products`, {
+      const res = await fetch(`${API_BASE}/products`, {
         method: 'POST',
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: fd,
@@ -104,6 +111,8 @@ const AddProduct = () => {
         mrpPrice: '',
         discount: 0,
         colours: '',
+        productOfWeek: false,
+        featured: false,
       });
       setMainImage(null);
       setAdditionalMedia([]);
@@ -245,6 +254,30 @@ const AddProduct = () => {
                   placeholder="Red, Blue, Green..."
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all duration-200 bg-slate-50 hover:bg-white"
                 />
+              </div>
+
+              {/* Flags */}
+              <div className="flex items-center gap-6">
+                <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <input
+                    type="checkbox"
+                    name="productOfWeek"
+                    checked={form.productOfWeek}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-slate-600 rounded focus:ring-0 border-slate-300"
+                  />
+                  Product of the Week
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <input
+                    type="checkbox"
+                    name="featured"
+                    checked={form.featured}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-slate-600 rounded focus:ring-0 border-slate-300"
+                  />
+                  Featured Product
+                </label>
               </div>
 
               {/* File Upload Section */}

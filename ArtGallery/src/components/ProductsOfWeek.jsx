@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { fetchJson } from "../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { Link } from "react-router-dom";
 
 const ProductsOfWeek = () => {
   const [products, setProducts] = useState([]);
@@ -10,30 +11,27 @@ const ProductsOfWeek = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  // Fetch top products
+  // Fetch products with productOfWeek: true
   useEffect(() => {
-    const fetchTopProducts = async () => {
+    const fetchProductsOfWeek = async () => {
       try {
         setLoading(true);
-        console.log('Fetching top products...');
-        const data = await fetchJson("/analytics/top-products");
-        console.log('Received products:', data);
-        if (!Array.isArray(data)) {
-          throw new Error('Expected an array of products, got: ' + typeof data);
-        }
-        if (data.length === 0) {
-          console.log('No products returned from API');
-        }
-        setProducts(data);
+        const data = await fetchJson("/products?productOfWeek=true");
+        setProducts(
+          Array.isArray(data)
+            ? data.filter((p) => p.productOfWeek === true)
+            : []
+        );
       } catch (err) {
-        setError("Failed to load top products. Please try again later.");
+        setError(
+          "Failed to load products of the week. Please try again later."
+        );
         console.error("API Error:", err.message || err);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchTopProducts();
+    fetchProductsOfWeek();
   }, []);
 
   useEffect(() => {
@@ -112,62 +110,73 @@ const ProductsOfWeek = () => {
 
           {/* Product Display */}
           <AnimatePresence mode="wait">
-            <motion.div
-              key={currentProduct._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="grid md:grid-cols-2 gap-8 items-center"
+            <Link
+              to={`/product/${currentProduct._id}`}
+              style={{ textDecoration: "none", color: "inherit" }}
             >
-              {/* Product Image */}
-              <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
-                <img
-                  src={currentProduct.mainImage}
-                  alt={currentProduct.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* Product Info */}
-              <div className="text-center md:text-left space-y-6">
-                <div>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-sm font-medium mb-4"
-                  >
-                    Best Seller #{currentIndex + 1}
-                  </motion.div>
-                  <h3 className="text-2xl font-medium text-gray-900">
-                    {currentProduct.name}
-                  </h3>
+              <motion.div
+                key={currentProduct._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="grid md:grid-cols-2 gap-8 items-center cursor-pointer"
+              >
+                {/* Product Image */}
+                <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
+                  <img
+                    src={currentProduct.mainImage}
+                    alt={currentProduct.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
-                <p className="text-gray-600 leading-relaxed">
-                  {currentProduct.description}
-                </p>
-
-                <div className="flex flex-col md:flex-row gap-4 md:items-center justify-center md:justify-start">
-                  <div className="text-2xl font-medium text-amber-600">
-                    ₹{currentProduct.mrpPrice}
-                    {currentProduct.discount > 0 && (
-                      <span className="ml-2 text-sm text-green-600">
-                        {currentProduct.discount}% OFF
-                      </span>
-                    )}
+                {/* Product Info */}
+                <div className="text-center md:text-left space-y-6">
+                  <div>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-sm font-medium mb-4"
+                    >
+                      Best Seller #{currentIndex + 1}
+                    </motion.div>
+                    <h3 className="text-2xl font-medium text-gray-900">
+                      {currentProduct.name}
+                    </h3>
                   </div>
-                </div>
 
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <button className="px-8 py-3 bg-amber-600 text-white rounded-full hover:bg-amber-500 transition-colors w-full md:w-auto">
-                    View Details
-                  </button>
-                </motion.div>
-              </div>
-            </motion.div>
+                  <p className="text-gray-600 leading-relaxed">
+                    {currentProduct.description}
+                  </p>
+
+                  <div className="flex flex-col md:flex-row gap-4 md:items-center justify-center md:justify-start">
+                    <div className="text-2xl font-medium text-amber-600">
+                      ₹{currentProduct.mrpPrice}
+                      {currentProduct.discount > 0 && (
+                        <span className="ml-2 text-sm text-green-600">
+                          {currentProduct.discount}% OFF
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <button
+                      className="px-8 py-3 bg-amber-600 text-white rounded-full hover:bg-amber-500 transition-colors w-full md:w-auto"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.location.href = `/product/${currentProduct._id}`;
+                      }}
+                    >
+                      View Details
+                    </button>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </Link>
           </AnimatePresence>
 
           {/* Dots Navigation */}

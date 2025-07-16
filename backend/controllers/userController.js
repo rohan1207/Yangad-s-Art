@@ -48,15 +48,18 @@ export const authUser = async (req, res) => {
   const { phone, password } = req.body;
   try {
     const user = await User.findOne({ phone });
-    if (user && (await user.matchPassword(password))) {
-      res.json({
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    if (await user.matchPassword(password)) {
+      return res.json({
         _id: user._id,
         phone: user.phone,
         name: user.name,
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

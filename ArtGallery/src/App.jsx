@@ -21,6 +21,7 @@ import Footer from "./components/Footer";
 import RequireAuth from "./components/RequireAuth";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import ScrollToTop from "./components/ScrollToTop";
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
     <CartProvider>
     <Router>
       <div className="min-h-screen flex flex-col">
+        <ScrollToTop />
         <Navbar />
         <main className="flex-grow">
           <Routes>
