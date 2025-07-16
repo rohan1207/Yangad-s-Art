@@ -1,5 +1,9 @@
 import { motion } from "framer-motion";
-import { IoHeartOutline, IoFlameOutline, IoHandRightOutline } from "react-icons/io5";
+import {
+  IoHeartOutline,
+  IoFlameOutline,
+  IoHandRightOutline,
+} from "react-icons/io5";
 
 const AboutUs = () => {
   return (
@@ -10,9 +14,9 @@ const AboutUs = () => {
           <img
             src="/ab.png" // Add an image of candle making or community work
             alt="Candle Making Process"
-            className="w-full h-full object-cover object-top"
+            className="w-full h-full object-cover bg-white"
           />
-          <div className="absolute inset-0" />
+          <div className="absolute inset-0 bg-black/40" />
         </div>
         <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
           <motion.div
@@ -21,9 +25,11 @@ const AboutUs = () => {
             transition={{ duration: 0.8 }}
             className="max-w-3xl"
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-light text-white mb-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-light text-white mb-4 px-6 py-4 rounded-xl">
               Crafting Light,
-              <span className="block text-amber-400 font-medium">Spreading Hope</span>
+              <span className="block text-amber-400 font-medium">
+                Spreading Hope
+              </span>
             </h1>
           </motion.div>
         </div>
@@ -45,10 +51,16 @@ const AboutUs = () => {
             </h2>
             <div className="w-24 h-0.5 bg-amber-400" />
             <p className="text-lg text-gray-600 leading-relaxed">
-              We are Shreya and Shruti, two hearts united by a shared vision of creating beauty while making a difference. What started as a small home-based candle-making venture has blossomed into a purpose-driven mission that illuminates lives beyond just homes.
+              We are Shreya and Shruti, two hearts united by a shared vision of
+              creating beauty while making a difference. What started as a small
+              home-based candle-making venture has blossomed into a
+              purpose-driven mission that illuminates lives beyond just homes.
             </p>
             <p className="text-lg text-gray-600 leading-relaxed">
-              Each candle we craft is more than just a source of light—it's a beacon of hope for children who need it most. Every purchase contributes directly to supporting orphaned children, helping them build stronger foundations for their future.
+              Each candle we craft is more than just a source of light—it's a
+              beacon of hope for children who need it most. Every purchase
+              contributes directly to supporting orphaned children, helping them
+              build stronger foundations for their future.
             </p>
           </motion.div>
 
@@ -62,23 +74,33 @@ const AboutUs = () => {
           >
             <div className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-shadow duration-300">
               <IoHeartOutline className="w-12 h-12 text-amber-500 mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Care with Purpose</h3>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                Care with Purpose
+              </h3>
               <p className="text-gray-600">
-                Every product is crafted with love and intention, knowing that each sale supports a child's journey towards a brighter future.
+                Every product is crafted with love and intention, knowing that
+                each sale supports a child's journey towards a brighter future.
               </p>
             </div>
             <div className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-shadow duration-300">
               <IoFlameOutline className="w-12 h-12 text-amber-500 mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Quality & Impact</h3>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                Quality & Impact
+              </h3>
               <p className="text-gray-600">
-                We believe in creating products that not only enhance your space but also make a meaningful difference in children's lives.
+                We believe in creating products that not only enhance your space
+                but also make a meaningful difference in children's lives.
               </p>
             </div>
             <div className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-shadow duration-300">
               <IoHandRightOutline className="w-12 h-12 text-amber-500 mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Community Support</h3>
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                Community Support
+              </h3>
               <p className="text-gray-600">
-                Together with our customers, we're building a community that supports orphaned children physically, emotionally, and spiritually.
+                Together with our customers, we're building a community that
+                supports orphaned children physically, emotionally, and
+                spiritually.
               </p>
             </div>
           </motion.div>
@@ -96,7 +118,9 @@ const AboutUs = () => {
             Making a <span className="text-amber-600">Difference</span>
           </h2>
           <p className="text-lg text-gray-600 leading-relaxed mb-8">
-            With every candle you purchase, you're not just buying a product—you're investing in a child's future. Together, we can help them grow stronger physically, emotionally, and spiritually.
+            With every candle you purchase, you're not just buying a
+            product—you're investing in a child's future. Together, we can help
+            them grow stronger physically, emotionally, and spiritually.
           </p>
           <motion.button
             whileHover={{ scale: 1.05, y: -2 }}
@@ -117,9 +141,12 @@ const AboutUs = () => {
         >
           <div className="text-6xl text-amber-400 font-serif mb-6">"</div>
           <p className="text-xl md:text-2xl text-gray-800 font-light italic mb-6">
-            Together, let's illuminate lives and create a brighter future for those who need it most.
+            Together, let's illuminate lives and create a brighter future for
+            those who need it most.
           </p>
-          <p className="text-lg text-amber-600 font-medium">- Shreya and Shruti</p>
+          <p className="text-lg text-amber-600 font-medium">
+            - Shreya and Shruti
+          </p>
         </motion.div>
       </div>
     </div>

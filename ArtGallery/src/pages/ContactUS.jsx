@@ -67,27 +67,39 @@ export default function ContactUs() {
               want to say hello, we'd love to hear from you. Choose your
               preferred way to connect with us.
             </p>
-          </motion.div>
-
-          {/* Contact Form */}
+              {/* Contact Form & Opening Hours */}
+      <div className="mt-20 pt-10 grid md:grid-cols-2 gap-16 max-w-6xl mx-auto">
+        <div>
+          
+          
           <ContactForm />
-
-          {/* Business Hours */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-16 text-center"
-          >
-            <h2 className="text-xl font-serif font-light text-gray-900 mb-3">
-              Business <span className="text-amber-600 font-medium">Hours</span>
-            </h2>
-            <p className="text-gray-600">
-              Monday - Saturday: 10:00 AM - 7:00 PM
-              <br />
-              Sunday: Closed
-            </p>
+        </div>
+        <div className="pt-16 ">
+          <div className=" border-gray-200 rounded-lg bg-white shadow-lg p-8">
+            <h2 className="text-2xl font-thin tracking-[0.2em] mb-2 text-black ">OPENING HOURS</h2>
+            
+            <div className="space-y-3 text-gray-700 font-light">
+              <div className="flex justify-between">
+                <span>Mon - Fri</span>
+                <span>11:00 am – 7:00 pm</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Saturday</span>
+                <span>11:00 am – 3:00 pm</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Sunday</span>
+                <span>Off Day</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
           </motion.div>
+
+      
+
+       
         </div>
       </div>
     </motion.div>
