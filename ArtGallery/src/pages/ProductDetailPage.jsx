@@ -7,113 +7,50 @@ import { fetchJson } from "../utils/api";
 import { IoArrowBackOutline } from "react-icons/io5";
 import axios from "axios";
 
-
-
-
 function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth(); // Assuming you have an auth context
+  const { user } = useAuth();
+  const { addItem } = useCart();
   const fileInputRef = useRef(null);
 
-  // Product state
+  // State variables
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // UI state
   const [mainImg, setMainImg] = useState('');
   const [qty, setQty] = useState(1);
   const [selectedColour, setSelectedColour] = useState('');
   const [pincode, setPincode] = useState('');
-  
-  // Customization state
   const [customization, setCustomization] = useState({
     hasCustomization: false,
     name: '',
     photoUrl: '',
     description: ''
   });
-
-  // Related products state
   const [related, setRelated] = useState([]);
 
-  // Fetch product data
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setLoading(true);
-        const productData = await fetchJson(`/products/${id}`);
-        setProduct(productData);
-        setMainImg(productData.mainImage);
-        
-        // Check if product has customization
-        if (productData.subcategory === "Customized Name" || 
-            productData.subcategory === "Customized Photo") {
-          setCustomization(prev => ({ ...prev, hasCustomization: true }));
-        }
-        
-        setError(null);
-      } catch (err) {
-        setError('Failed to load product');
-        console.error('Error fetching product:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Derived values
+  const discountedPrice = product && product.mrpPrice
+    ? product.mrpPrice - (product.mrpPrice * (product.discount || 0) / 100)
+    : 0;
 
-    if (id) {
-      fetchProduct();
-    }
-  }, [id]);
+  const colourArray = product && product.colours
+    ? (Array.isArray(product.colours)
+        ? product.colours
+        : (product.colours || '').split(',').map(c => c.trim()).filter(Boolean))
+    : [];
 
-  // Fetch related products when product is loaded
-  useEffect(() => {
-    const fetchRelated = async () => {
-      if (!product || !product.category) return;
-      try {
-        const all = await fetchJson(`/products`);
-        // Filter by same category, exclude current product
-        const rel = all.filter(
-          (p) => p.category === product.category && p._id !== product._id
-        ).slice(0, 4);
-        setRelated(rel);
-      } catch (err) {
-        console.error('Error fetching related products:', err);
-      }
-    };
-
-    fetchRelated();
-  }, [product]);
-
-  // Handle photo upload for customization
-  const handlePhotoUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    try {
-      // Assuming you have an upload utility
-      const photoUrl = await uploadImage(file);
-      setCustomization(prev => ({
-        ...prev,
-        photoUrl: photoUrl
-      }));
-    } catch (err) {
-      console.error('Error uploading photo:', err);
-      Swal.fire('Error', 'Failed to upload photo', 'error');
-    }
-  };
-
-  // Validate customization fields
+  // Helper functions
   const isCustomizationFilled = () => {
     if (!customization.hasCustomization) return true;
     
-    if (product.subcategory === "Customized Name") {
-      return customization.name.trim() !== '';
+    if (product?.subcategory === "Customized Name") {
+      return customization.name.trim() !== '' && customization.description.trim() !== '';
     }
     
-    if (product.subcategory === "Customized Photo") {
-      return customization.photoUrl !== '';
+    if (product?.subcategory === "Customized Photo") {
+      return customization.photoUrl !== '' && customization.description.trim() !== '';
     }
     
     return true;
@@ -130,8 +67,48 @@ function ProductDetailPage() {
     return true;
   };
 
-  // Add to cart function (client-side cart)
-  const { addItem } = useCart();
+  // File upload handler
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      Swal.fire('Error', 'Please select a valid image file', 'error');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      Swal.fire('Error', 'File size should be less than 5MB', 'error');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Replace with your actual upload endpoint
+      const response = await axios.post('/api/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data && response.data.url) {
+        setCustomization(prev => ({
+          ...prev,
+          photoUrl: response.data.url
+        }));
+        Swal.fire('Success', 'Photo uploaded successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      Swal.fire('Error', 'Failed to upload photo. Please try again.', 'error');
+    }
+  };
+
+  // Add to cart function
   const addToCart = () => {
     if (!validateCustomization()) return;
 
@@ -178,8 +155,57 @@ function ProductDetailPage() {
     }
   };
 
+  // Effects
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const productData = await fetchJson(`/products/${id}`);
+        setProduct(productData);
+        setMainImg(productData.mainImage);
+        if (productData.subcategory === "Customized Name" || productData.subcategory === "Customized Photo") {
+          setCustomization(prev => ({ ...prev, hasCustomization: true }));
+        }
+        setError(null);
+      } catch (err) {
+        setError('Failed to load product');
+        console.error('Error fetching product:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const fetchRelated = async () => {
+      if (!product || !product.category) return;
+      
+      try {
+        const all = await fetchJson(`/products`);
+        const rel = all.filter(
+          (p) => p.category === product.category && p._id !== product._id
+        ).slice(0, 4);
+        setRelated(rel);
+      } catch (err) {
+        console.error('Error fetching related products:', err);
+      }
+    };
+
+    fetchRelated();
+  }, [product]);
+
+  useEffect(() => {
+    if (colourArray.length > 0 && !selectedColour) {
+      setSelectedColour(colourArray[0]);
+    }
+  }, [colourArray.length, selectedColour]);
+
   // Loading state
-   if (loading){
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 min-h-[400px] mt-20">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-500 mb-6"></div>
@@ -203,26 +229,6 @@ function ProductDetailPage() {
       </div>
     );
   }
-
-  // Calculate discounted price
-  const discountedPrice = product && product.mrpPrice
-    ? product.mrpPrice - (product.mrpPrice * (product.discount || 0) / 100)
-    : 0;
-
-  // Parse colours from product (handle both array and string) safely
-  const colourArray = product && product.colours
-    ? (Array.isArray(product.colours)
-        ? product.colours
-        : (product.colours || '').split(',').map(c => c.trim()).filter(Boolean))
-    : [];
-
-  // Set default colour if not selected (fix: use useEffect to avoid infinite re-render)
-  useEffect(() => {
-    if (colourArray.length > 0 && !selectedColour) {
-      setSelectedColour(colourArray[0]);
-    }
-    // eslint-disable-next-line
-  }, [colourArray, selectedColour]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
