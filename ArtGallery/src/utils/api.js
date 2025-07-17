@@ -5,17 +5,23 @@ export const fetchJson = async (endpoint, options = {}) => {
   const token = localStorage.getItem('userToken');
   const baseHeaders = { 'Content-Type': 'application/json' };
   if (token) baseHeaders['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${API_BASE}${endpoint}`, {
+  const url = `${API_BASE}${endpoint}`;
+  console.log('[fetchJson] Requesting:', url, options);
+  const res = await fetch(url, {
     headers: { ...baseHeaders, ...(options.headers || {}) },
     mode: 'cors',
     credentials: 'include',
     ...options,
   });
+  console.log('[fetchJson] Response status:', res.status);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
+    console.error('[fetchJson] Error response:', err);
     throw new Error(err.message || 'Request failed');
   }
-  return res.json();
+  const json = await res.json();
+  console.log('[fetchJson] Response JSON:', json);
+  return json;
 };
 
 export const postJson = async (endpoint, body = {}, token) => {

@@ -7,209 +7,188 @@ import { fetchJson } from "../utils/api";
 import { IoArrowBackOutline } from "react-icons/io5";
 import axios from "axios";
 
-const ProductDetailPage = () => {
+
+
+
+function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [mainImg, setMainImg] = useState("");
-  const [qty, setQty] = useState(1);
-  const [pincode, setPincode] = useState("");
-  const { addItem } = useCart();
-  const { user } = useAuth();
-  const [customization, setCustomization] = useState({
-    name: "",
-    photoUrl: "",
-    description: "",
-    hasCustomization: false,
-  });
-
-  // File input ref for photo upload
+  const { user } = useAuth(); // Assuming you have an auth context
   const fileInputRef = useRef(null);
 
-  // Check if product needs customization
-  useEffect(() => {
-    if (product) {
-      const needsCustomization =
-        ["jewellery", "t-shirt"].includes(product.category.toLowerCase()) &&
-        ["Customized Name", "Customized Photo"].includes(product.subcategory);
-      setCustomization((prev) => ({
-        ...prev,
-        hasCustomization: needsCustomization,
-      }));
-    }
-  }, [product]);
+  // Product state
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // UI state
+  const [mainImg, setMainImg] = useState('');
+  const [qty, setQty] = useState(1);
+  const [selectedColour, setSelectedColour] = useState('');
+  const [pincode, setPincode] = useState('');
+  
+  // Customization state
+  const [customization, setCustomization] = useState({
+    hasCustomization: false,
+    name: '',
+    photoUrl: '',
+    description: ''
+  });
 
-  // Fetch product on mount
+  // Related products state
+  const [related, setRelated] = useState([]);
+
+  // Fetch product data
   useEffect(() => {
-    const load = async () => {
+    const fetchProduct = async () => {
       try {
-        const data = await fetchJson(`/products/${id}`);
-        setProduct(data);
-        setMainImg(data.mainImage);
-      } catch (e) {
-        setError("Failed to load product");
+        setLoading(true);
+        const productData = await fetchJson(`/products/${id}`);
+        setProduct(productData);
+        setMainImg(productData.mainImage);
+        
+        // Check if product has customization
+        if (productData.subcategory === "Customized Name" || 
+            productData.subcategory === "Customized Photo") {
+          setCustomization(prev => ({ ...prev, hasCustomization: true }));
+        }
+        
+        setError(null);
+      } catch (err) {
+        setError('Failed to load product');
+        console.error('Error fetching product:', err);
       } finally {
         setLoading(false);
       }
     };
-    load();
+
+    if (id) {
+      fetchProduct();
+    }
   }, [id]);
 
-  // Derived values calculated every render (safe before early return)
-  const colourArray = product
-    ? Array.isArray(product.colours)
-      ? product.colours
-      : (product.colours || "").split(",").map((c) => c.trim())
-    : [];
-  const discountedPrice = product
-    ? product.mrpPrice - (product.mrpPrice * product.discount) / 100
-    : 0;
-
-  const [selectedColour, setSelectedColour] = useState("");
-
+  // Fetch related products when product is loaded
   useEffect(() => {
-    if (colourArray.length) setSelectedColour(colourArray[0]);
-  }, [colourArray]);
+    const fetchRelated = async () => {
+      if (!product || !product.category) return;
+      try {
+        const all = await fetchJson(`/products`);
+        // Filter by same category, exclude current product
+        const rel = all.filter(
+          (p) => p.category === product.category && p._id !== product._id
+        ).slice(0, 4);
+        setRelated(rel);
+      } catch (err) {
+        console.error('Error fetching related products:', err);
+      }
+    };
 
-  // Handle photo upload
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
+    fetchRelated();
+  }, [product]);
+
+  // Handle photo upload for customization
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "yangart_uploads");
-
     try {
-      const response = await axios.post(
-        "https://api.cloudinary.com/v1_1/dscbo7ibc/mainImage/upload",
-        formData
-      );
-      setCustomization((prev) => ({
+      // Assuming you have an upload utility
+      const photoUrl = await uploadImage(file);
+      setCustomization(prev => ({
         ...prev,
-        photoUrl: response.data.secure_url,
+        photoUrl: photoUrl
       }));
-    } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Upload Failed",
-        text: "Failed to upload image. Please try again.",
-      });
+    } catch (err) {
+      console.error('Error uploading photo:', err);
+      Swal.fire('Error', 'Failed to upload photo', 'error');
     }
   };
 
-  // Validate customization before add to cart/buy
-  const validateCustomization = () => {
-    if (!customization.hasCustomization) return true;
-
-    if (
-      product.subcategory === "Customized Name" &&
-      !customization.name.trim()
-    ) {
-      Swal.fire({
-        icon: "warning",
-        title: "Name Required",
-        text: "Please enter the name for customization",
-      });
-      return false;
-    }
-
-    if (product.subcategory === "Customized Photo" && !customization.photoUrl) {
-      Swal.fire({
-        icon: "warning",
-        title: "Photo Required",
-        text: "Please upload a photo for customization",
-      });
-      return false;
-    }
-
-    if (!customization.description.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Description Required",
-        text: "Please provide a description for your customization",
-      });
-      return false;
-    }
-
-    return true;
-  };
-
+  // Validate customization fields
   const isCustomizationFilled = () => {
     if (!customization.hasCustomization) return true;
-    if (
-      product.subcategory === "Customized Name" &&
-      !customization.name.trim()
-    ) {
-      return false;
+    
+    if (product.subcategory === "Customized Name") {
+      return customization.name.trim() !== '';
     }
-    if (product.subcategory === "Customized Photo" && !customization.photoUrl) {
-      return false;
+    
+    if (product.subcategory === "Customized Photo") {
+      return customization.photoUrl !== '';
     }
-    if (!customization.description.trim()) {
-      return false;
-    }
+    
     return true;
   };
 
-  // Modify existing addToCart function
-  const addToCart = () => {
-    if (!validateCustomization()) return;
-
-    addItem({
-      _id: product._id,
-      name: product.name,
-      price: discountedPrice,
-      qty,
-      colour: selectedColour,
-      customization: customization.hasCustomization
-        ? {
-            name: customization.name,
-            photoUrl: customization.photoUrl,
-            description: customization.description,
-            category: product.category,
-            subcategory: product.subcategory,
-          }
-        : undefined,
-    });
-
-    Swal.fire({
-      icon: "success",
-      title: "Added to Cart",
-      showConfirmButton: false,
-      timer: 1500,
-    });
+  const validateCustomization = () => {
+    if (!customization.hasCustomization) return true;
+    
+    if (!isCustomizationFilled()) {
+      Swal.fire('Error', 'Please fill in all customization details', 'error');
+      return false;
+    }
+    
+    return true;
   };
 
-  // Modify existing buyNow function
-  const buyNow = () => {
+  // Add to cart function
+  const addToCart = async () => {
     if (!validateCustomization()) return;
 
-    addItem({
-      _id: product._id,
-      name: product.name,
-      price: discountedPrice,
-      qty,
-      colour: selectedColour,
-      customization: customization.hasCustomization
-        ? {
-            name: customization.name,
-            photoUrl: customization.photoUrl,
-            description: customization.description,
-            category: product.category,
-            subcategory: product.subcategory,
-          }
-        : undefined,
-    });
+    try {
+      const cartItem = {
+        productId: product._id,
+        quantity: qty,
+        colour: selectedColour,
+        customization: customization.hasCustomization ? {
+          name: customization.name,
+          photoUrl: customization.photoUrl,
+          description: customization.description
+        } : null
+      };
 
-    navigate("/cart");
+      await fetchJson('/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(cartItem)
+      });
+
+      Swal.fire('Success', 'Item added to cart!', 'success');
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      Swal.fire('Error', 'Failed to add item to cart', 'error');
+    }
   };
 
-  if (loading)
+  // Buy now function
+  const buyNow = async () => {
+    if (!validateCustomization()) return;
+
+    try {
+      const orderItem = {
+        productId: product._id,
+        quantity: qty,
+        colour: selectedColour,
+        customization: customization.hasCustomization ? {
+          name: customization.name,
+          photoUrl: customization.photoUrl,
+          description: customization.description
+        } : null
+      };
+
+      // Navigate to checkout or create order
+      navigate('/checkout', { state: { items: [orderItem] } });
+    } catch (err) {
+      console.error('Error processing buy now:', err);
+      Swal.fire('Error', 'Failed to process order', 'error');
+    }
+  };
+
+  // Loading state
+   if (loading){
     return (
-      <div className="flex flex-col items-center justify-center py-20 min-h-[400px] mt-10">
+      <div className="flex flex-col items-center justify-center py-20 min-h-[400px] mt-20">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-amber-500 mb-6"></div>
         <div className="text-2xl font-serif text-amber-600 mb-2">
           Happiness is loading...
@@ -219,12 +198,31 @@ const ProductDetailPage = () => {
         </div>
       </div>
     );
-  if (error || !product)
+  }
+
+  // Error state
+  if (error || !product) {
     return (
-      <div className="text-red-500 text-center py-20">
-        {error || "Product not found"}
+      <div className="max-w-7xl mx-auto px-4 py-10">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-red-600">{error || 'Product not found'}</div>
+        </div>
       </div>
     );
+  }
+
+  // Calculate discounted price
+  const discountedPrice = product.mrpPrice - (product.mrpPrice * (product.discount || 0) / 100);
+  
+  // Parse colours from product (handle both array and string)
+  const colourArray = Array.isArray(product.colours)
+    ? product.colours
+    : (product.colours || '').split(',').map(c => c.trim()).filter(Boolean);
+  
+  // Set default colour if not selected
+  if (colourArray.length > 0 && !selectedColour) {
+    setSelectedColour(colourArray[0]);
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
@@ -237,10 +235,10 @@ const ProductDetailPage = () => {
 
       <div className="flex flex-col md:flex-row gap-8">
         {/* Images */}
-        <div className="flex md:w-1/2 gap-4">
+        <div className="w-full md:w-1/2 flex flex-col md:flex-row gap-4">
           {/* thumbnails */}
-          <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible md:max-h-[400px]">
-            {[product.mainImage, ...product.additionalMedia].map((img, i) => (
+          <div className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible md:min-h-[400px]">
+            {[product.mainImage, ...(product.additionalMedia || [])].map((img, i) => (
               <img
                 key={i}
                 src={img}
@@ -253,11 +251,11 @@ const ProductDetailPage = () => {
             ))}
           </div>
           {/* main image */}
-          <div className="flex-1">
+          <div className="w-full md:flex-1 mt-4 md:mt-0 flex items-center justify-center">
             <img
               src={mainImg}
               alt={product.name}
-              className="w-full h-[400px] object-cover rounded"
+              className="w-full max-w-xs h-80 md:h-[400px] object-cover rounded"
             />
           </div>
         </div>
@@ -424,12 +422,12 @@ const ProductDetailPage = () => {
                     title: "Please login",
                     text: "You need to login or signup to continue checkout",
                     confirmButtonText: "Login",
-                    showDenyButton: false,
+                    showDenyButton: true,
                     denyButtonText: "Sign up",
                   });
                   if (isConfirmed) return navigate("/login");
-                  if (dismiss === Swal.DenyReason.cancel)
-                    return navigate("/signup");
+                  if (dismiss === Swal.DismissReason.deny) return navigate("/signup");
+                  return;
                 }
                 buyNow();
               }}
@@ -479,8 +477,34 @@ const ProductDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Related Products Section */}
+      {related.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-semibold mb-6 text-amber-600">Related Products</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {related.map((p) => (
+              <div
+                key={p._id}
+                className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden cursor-pointer"
+                onClick={() => navigate(`/product/${p._id}`)}
+              >
+                <img
+                  src={p.mainImage}
+                  alt={p.name}
+                  className="w-full h-40 object-cover object-center"
+                />
+                <div className="p-4">
+                  <div className="font-medium text-gray-900 line-clamp-1">{p.name}</div>
+                  <div className="text-amber-600 font-semibold mt-1">₹{p.mrpPrice}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}
 
 export default ProductDetailPage;

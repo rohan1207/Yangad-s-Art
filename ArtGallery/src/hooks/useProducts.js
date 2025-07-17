@@ -15,12 +15,19 @@ export const useProducts = (category) => {
     const load = async () => {
       try {
         const all = await fetchJson('/products');
+        console.log('[useProducts] Fetched products:', all);
+        if (!Array.isArray(all)) {
+          setError('Products response is not an array');
+          setLoading(false);
+          return;
+        }
         if (!cancelled) {
           const filtered = all.filter((p) => p.category === category);
           setProducts(filtered);
           setLoading(false);
         }
       } catch (err) {
+        console.error('[useProducts] Error:', err);
         if (!cancelled) {
           setError(err.message);
           setLoading(false);

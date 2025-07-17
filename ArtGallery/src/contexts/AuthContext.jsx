@@ -22,33 +22,47 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   const login = async (phone, password) => {
-    const data = await postJson('/users/login', { phone, password });
-    const newToken = data.token || data.accessToken || data.jwt || (data.data && data.data.token);
-    if (newToken) setToken(newToken);
-    // Some backends may not return the user object – fetch if missing
-    if (data.user) setUser(data.user);
-    else {
-      try {
-        const me = await fetchJson('/users/me', {
-          headers: { Authorization: `Bearer ${data.token}` },
-        });
-        setUser(me);
-      } catch (e) {
-        console.error('Failed to fetch profile after login', e);
+    setLoading(true);
+    try {
+      const data = await postJson('/users/login', { phone, password });
+      const newToken = data.token || data.accessToken || data.jwt || (data.data && data.data.token);
+      if (newToken) setToken(newToken);
+      // Some backends may not return the user object – fetch if missing
+      if (data.user) setUser(data.user);
+      else {
+        try {
+          const me = await fetchJson('/users/me', {
+            headers: { Authorization: `Bearer ${data.token}` },
+          });
+          setUser(me);
+        } catch (e) {
+          console.error('Failed to fetch profile after login', e);
+        }
       }
+    } catch (e) {
+      console.error('Login error:', e);
+    } finally {
+      setLoading(false);
     }
   };
 
   const signup = async (name, phone, password) => {
-    const data = await postJson('/users/register', { name, phone, password });
-    const newToken = data.token || data.accessToken || data.jwt || (data.data && data.data.token);
-    if (newToken) setToken(newToken);
-    if (data.user) setUser(data.user);
-    else {
-      const me = await fetchJson('/users/me', {
-        headers: { Authorization: `Bearer ${data.token}` },
-      });
-      setUser(me);
+    setLoading(true);
+    try {
+      const data = await postJson('/users/register', { name, phone, password });
+      const newToken = data.token || data.accessToken || data.jwt || (data.data && data.data.token);
+      if (newToken) setToken(newToken);
+      if (data.user) setUser(data.user);
+      else {
+        const me = await fetchJson('/users/me', {
+          headers: { Authorization: `Bearer ${data.token}` },
+        });
+        setUser(me);
+      }
+    } catch (e) {
+      console.error('Signup error:', e);
+    } finally {
+      setLoading(false);
     }
   };
 

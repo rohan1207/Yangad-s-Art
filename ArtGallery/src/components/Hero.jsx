@@ -11,6 +11,8 @@ const Hero = () => {
           alt="Background"
           className="md:hidden w-full h-full object-cover object-center opacity-100"
         />
+        {/* White overlay for mobile only */}
+        <div className="absolute inset-0 bg-white/30 md:hidden" />
         {/* Desktop/Tablet image (hidden on smaller screens) */}
         <img
           src="./newHero.png"
