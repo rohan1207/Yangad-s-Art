@@ -205,12 +205,16 @@ function ProductDetailPage() {
   }
 
   // Calculate discounted price
-  const discountedPrice = product.mrpPrice - (product.mrpPrice * (product.discount || 0) / 100);
-  
-  // Parse colours from product (handle both array and string)
-  const colourArray = Array.isArray(product.colours)
-    ? product.colours
-    : (product.colours || '').split(',').map(c => c.trim()).filter(Boolean);
+  const discountedPrice = product && product.mrpPrice
+    ? product.mrpPrice - (product.mrpPrice * (product.discount || 0) / 100)
+    : 0;
+
+  // Parse colours from product (handle both array and string) safely
+  const colourArray = product && product.colours
+    ? (Array.isArray(product.colours)
+        ? product.colours
+        : (product.colours || '').split(',').map(c => c.trim()).filter(Boolean))
+    : [];
 
   // Set default colour if not selected (fix: use useEffect to avoid infinite re-render)
   useEffect(() => {
