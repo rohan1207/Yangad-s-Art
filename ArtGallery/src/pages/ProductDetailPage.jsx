@@ -130,35 +130,28 @@ function ProductDetailPage() {
     return true;
   };
 
-  // Add to cart function
-  const addToCart = async () => {
+  // Add to cart function (client-side cart)
+  const { addItem } = useCart();
+  const addToCart = () => {
     if (!validateCustomization()) return;
 
-    try {
-      const cartItem = {
-        productId: product._id,
-        quantity: qty,
-        colour: selectedColour,
-        customization: customization.hasCustomization ? {
-          name: customization.name,
-          photoUrl: customization.photoUrl,
-          description: customization.description
-        } : null
-      };
+    addItem({
+      _id: product._id,
+      name: product.name,
+      price: discountedPrice,
+      qty,
+      colour: selectedColour,
+      mainImage: product.mainImage,
+      customization: customization.hasCustomization
+        ? {
+            name: customization.name,
+            photoUrl: customization.photoUrl,
+            description: customization.description,
+          }
+        : undefined,
+    });
 
-      await fetchJson('/cart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cartItem)
-      });
-
-      Swal.fire('Success', 'Item added to cart!', 'success');
-    } catch (err) {
-      console.error('Error adding to cart:', err);
-      Swal.fire('Error', 'Failed to add item to cart', 'error');
-    }
+    Swal.fire('Hurray!', 'Item added to cart!', 'success');
   };
 
   // Buy now function
