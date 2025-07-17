@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   IoArrowForward,
   IoTicketOutline,
@@ -55,14 +56,17 @@ const PromoBanner = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-white rounded-full hover:bg-amber-400 transition-colors duration-300 shadow-md hover:shadow-lg group"
-            >
-              Shop Now
-              <IoArrowForward className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </motion.button>
+            
+            <Link to="/categories">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-white rounded-full hover:bg-amber-400 transition-colors duration-300 shadow-md hover:shadow-lg group"
+              >
+                Shop Now
+                <IoArrowForward className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </motion.button>
+            </Link>
           </motion.div>
         </div>
 

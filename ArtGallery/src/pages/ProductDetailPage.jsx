@@ -211,11 +211,14 @@ function ProductDetailPage() {
   const colourArray = Array.isArray(product.colours)
     ? product.colours
     : (product.colours || '').split(',').map(c => c.trim()).filter(Boolean);
-  
-  // Set default colour if not selected
-  if (colourArray.length > 0 && !selectedColour) {
-    setSelectedColour(colourArray[0]);
-  }
+
+  // Set default colour if not selected (fix: use useEffect to avoid infinite re-render)
+  useEffect(() => {
+    if (colourArray.length > 0 && !selectedColour) {
+      setSelectedColour(colourArray[0]);
+    }
+    // eslint-disable-next-line
+  }, [colourArray, selectedColour]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
