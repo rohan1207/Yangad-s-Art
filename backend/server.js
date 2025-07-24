@@ -52,5 +52,9 @@ app.get('/', (req, res) => {
   res.send({ message: 'YangArt backend running' });
 });
 
+app.get('/ping', (req, res) => {
+  res.send({ message: 'Pong' });
+})
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
