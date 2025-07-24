@@ -142,29 +142,27 @@ function ProductDetailPage() {
   };
 
   // Buy now function
-  const buyNow = async () => {
+    const buyNow = () => {
     if (!validateCustomization()) return;
 
-    try {
-      const orderItem = {
-        productId: product._id,
-        quantity: qty,
-        colour: selectedColour,
-        customization: customization.hasCustomization
-          ? {
-              name: customization.name,
-              photoUrl: customization.photoUrl,
-              description: customization.description,
-            }
-          : null,
-      };
+    addItem({
+      _id: product._id,
+      name: product.name,
+      price: discountedPrice,
+      qty,
+      colour: selectedColour,
+      mainImage: product.mainImage,
+      customization: customization.hasCustomization
+        ? {
+            name: customization.name,
+            photoUrl: customization.photoUrl,
+            description: customization.description,
+          }
+        : undefined,
+    });
 
-      // Navigate to checkout or create order
-      navigate("/checkout", { state: { items: [orderItem] } });
-    } catch (err) {
-      console.error("Error processing buy now:", err);
-      Swal.fire("Error", "Failed to process order", "error");
-    }
+    // Navigate to checkout
+    navigate("/checkout");
   };
 
   // Effects
