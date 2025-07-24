@@ -18,52 +18,62 @@ function ProductDetailPage() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [mainImg, setMainImg] = useState('');
+  const [mainImg, setMainImg] = useState("");
   const [qty, setQty] = useState(1);
-  const [selectedColour, setSelectedColour] = useState('');
-  const [pincode, setPincode] = useState('');
+  const [selectedColour, setSelectedColour] = useState("");
+  const [pincode, setPincode] = useState("");
   const [customization, setCustomization] = useState({
     hasCustomization: false,
-    name: '',
-    photoUrl: '',
-    description: ''
+    name: "",
+    photoUrl: "",
+    description: "",
   });
   const [related, setRelated] = useState([]);
 
   // Derived values
-  const discountedPrice = product && product.mrpPrice
-    ? product.mrpPrice - (product.mrpPrice * (product.discount || 0) / 100)
-    : 0;
+  const discountedPrice =
+    product && product.mrpPrice
+      ? product.mrpPrice - (product.mrpPrice * (product.discount || 0)) / 100
+      : 0;
 
-  const colourArray = product && product.colours
-    ? (Array.isArray(product.colours)
+  const colourArray =
+    product && product.colours
+      ? Array.isArray(product.colours)
         ? product.colours
-        : (product.colours || '').split(',').map(c => c.trim()).filter(Boolean))
-    : [];
+        : (product.colours || "")
+            .split(",")
+            .map((c) => c.trim())
+            .filter(Boolean)
+      : [];
 
   // Helper functions
   const isCustomizationFilled = () => {
     if (!customization.hasCustomization) return true;
-    
+
     if (product?.subcategory === "Customized Name") {
-      return customization.name.trim() !== '' && customization.description.trim() !== '';
+      return (
+        customization.name.trim() !== "" &&
+        customization.description.trim() !== ""
+      );
     }
-    
+
     if (product?.subcategory === "Customized Photo") {
-      return customization.photoUrl !== '' && customization.description.trim() !== '';
+      return (
+        customization.photoUrl !== "" && customization.description.trim() !== ""
+      );
     }
-    
+
     return true;
   };
 
   const validateCustomization = () => {
     if (!customization.hasCustomization) return true;
-    
+
     if (!isCustomizationFilled()) {
-      Swal.fire('Error', 'Please fill in all customization details', 'error');
+      Swal.fire("Error", "Please fill in all customization details", "error");
       return false;
     }
-    
+
     return true;
   };
 
@@ -73,38 +83,38 @@ function ProductDetailPage() {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      Swal.fire('Error', 'Please select a valid image file', 'error');
+    if (!file.type.startsWith("image/")) {
+      Swal.fire("Error", "Please select a valid image file", "error");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      Swal.fire('Error', 'File size should be less than 5MB', 'error');
+      Swal.fire("Error", "File size should be less than 5MB", "error");
       return;
     }
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      
+      formData.append("file", file);
+
       // Replace with your actual upload endpoint
-      const response = await axios.post('/api/upload', formData, {
+      const response = await axios.post("/api/upload", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
       if (response.data && response.data.url) {
-        setCustomization(prev => ({
+        setCustomization((prev) => ({
           ...prev,
-          photoUrl: response.data.url
+          photoUrl: response.data.url,
         }));
-        Swal.fire('Success', 'Photo uploaded successfully!', 'success');
+        Swal.fire("Success", "Photo uploaded successfully!", "success");
       }
     } catch (error) {
-      console.error('Error uploading photo:', error);
-      Swal.fire('Error', 'Failed to upload photo. Please try again.', 'error');
+      console.error("Error uploading photo:", error);
+      Swal.fire("Error", "Failed to upload photo. Please try again.", "error");
     }
   };
 
@@ -128,7 +138,7 @@ function ProductDetailPage() {
         : undefined,
     });
 
-    Swal.fire('Hurray!', 'Item added to cart!', 'success');
+    Swal.fire("Hurray!", "Item added to cart!", "success");
   };
 
   // Buy now function
@@ -140,18 +150,20 @@ function ProductDetailPage() {
         productId: product._id,
         quantity: qty,
         colour: selectedColour,
-        customization: customization.hasCustomization ? {
-          name: customization.name,
-          photoUrl: customization.photoUrl,
-          description: customization.description
-        } : null
+        customization: customization.hasCustomization
+          ? {
+              name: customization.name,
+              photoUrl: customization.photoUrl,
+              description: customization.description,
+            }
+          : null,
       };
 
       // Navigate to checkout or create order
-      navigate('/checkout', { state: { items: [orderItem] } });
+      navigate("/checkout", { state: { items: [orderItem] } });
     } catch (err) {
-      console.error('Error processing buy now:', err);
-      Swal.fire('Error', 'Failed to process order', 'error');
+      console.error("Error processing buy now:", err);
+      Swal.fire("Error", "Failed to process order", "error");
     }
   };
 
@@ -163,13 +175,16 @@ function ProductDetailPage() {
         const productData = await fetchJson(`/products/${id}`);
         setProduct(productData);
         setMainImg(productData.mainImage);
-        if (productData.subcategory === "Customized Name" || productData.subcategory === "Customized Photo") {
-          setCustomization(prev => ({ ...prev, hasCustomization: true }));
+        if (
+          productData.subcategory === "Customized Name" ||
+          productData.subcategory === "Customized Photo"
+        ) {
+          setCustomization((prev) => ({ ...prev, hasCustomization: true }));
         }
         setError(null);
       } catch (err) {
-        setError('Failed to load product');
-        console.error('Error fetching product:', err);
+        setError("Failed to load product");
+        console.error("Error fetching product:", err);
       } finally {
         setLoading(false);
       }
@@ -183,15 +198,17 @@ function ProductDetailPage() {
   useEffect(() => {
     const fetchRelated = async () => {
       if (!product || !product.category) return;
-      
+
       try {
         const all = await fetchJson(`/products`);
-        const rel = all.filter(
-          (p) => p.category === product.category && p._id !== product._id
-        ).slice(0, 4);
+        const rel = all
+          .filter(
+            (p) => p.category === product.category && p._id !== product._id
+          )
+          .slice(0, 4);
         setRelated(rel);
       } catch (err) {
-        console.error('Error fetching related products:', err);
+        console.error("Error fetching related products:", err);
       }
     };
 
@@ -224,7 +241,9 @@ function ProductDetailPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-red-600">{error || 'Product not found'}</div>
+          <div className="text-lg text-red-600">
+            {error || "Product not found"}
+          </div>
         </div>
       </div>
     );
@@ -244,17 +263,19 @@ function ProductDetailPage() {
         <div className="w-full md:w-1/2 flex flex-col md:flex-row gap-4">
           {/* thumbnails */}
           <div className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible md:min-h-[400px]">
-            {[product.mainImage, ...(product.additionalMedia || [])].map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt={product.name}
-                onClick={() => setMainImg(img)}
-                className={`w-20 h-20 object-cover rounded cursor-pointer border ${
-                  mainImg === img ? "border-amber-500" : "border-transparent"
-                }`}
-              />
-            ))}
+            {[product.mainImage, ...(product.additionalMedia || [])].map(
+              (img, i) => (
+                <img
+                  key={i}
+                  src={img}
+                  alt={product.name}
+                  onClick={() => setMainImg(img)}
+                  className={`w-20 h-20 object-cover rounded cursor-pointer border ${
+                    mainImg === img ? "border-amber-500" : "border-transparent"
+                  }`}
+                />
+              )
+            )}
           </div>
           {/* main image */}
           <div className="w-full md:flex-1 mt-4 md:mt-0 flex items-center justify-center">
@@ -432,7 +453,8 @@ function ProductDetailPage() {
                     denyButtonText: "Sign up",
                   });
                   if (isConfirmed) return navigate("/login");
-                  if (dismiss === Swal.DismissReason.deny) return navigate("/signup");
+                  if (dismiss === Swal.DismissReason.deny)
+                    return navigate("/signup");
                   return;
                 }
                 buyNow();
@@ -487,7 +509,9 @@ function ProductDetailPage() {
       {/* Related Products Section */}
       {related.length > 0 && (
         <div className="mt-16">
-          <h2 className="text-2xl font-semibold mb-6 text-amber-600">Related Products</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-amber-600">
+            Related Products
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {related.map((p) => (
               <div
@@ -501,8 +525,12 @@ function ProductDetailPage() {
                   className="w-full h-40 object-cover object-center"
                 />
                 <div className="p-4">
-                  <div className="font-medium text-gray-900 line-clamp-1">{p.name}</div>
-                  <div className="text-amber-600 font-semibold mt-1">₹{p.mrpPrice}</div>
+                  <div className="font-medium text-gray-900 line-clamp-1">
+                    {p.name}
+                  </div>
+                  <div className="text-amber-600 font-semibold mt-1">
+                    ₹{p.mrpPrice}
+                  </div>
                 </div>
               </div>
             ))}
