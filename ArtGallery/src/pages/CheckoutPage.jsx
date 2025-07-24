@@ -86,6 +86,13 @@ const CheckoutPage = () => {
     }
   }, [isAuthenticated, items.length, authLoading, navigate]);
 
+  // Cleanup body style on unmount in case razorpay leaves it hidden
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-600">Preparing checkout...</div>
