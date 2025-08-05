@@ -1,5 +1,5 @@
 // Simple helper around fetch to include JWT token if present
-export const API_BASE = import.meta.env.VITE_API_URL || 'https://yangart-api.onrender.com/api';
+export const API_BASE = import.meta.env.VITE_API_URL || 'https://yangart-api.onrender.com';
 
 export const apiFetch = async (endpoint, options = {}) => {
   const token = localStorage.getItem('adminToken');
@@ -8,7 +8,8 @@ export const apiFetch = async (endpoint, options = {}) => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
-  const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+  const url = new URL(endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`, API_BASE);
+  const res = await fetch(url.href, { ...options, headers });
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(error.message || 'Request failed');
