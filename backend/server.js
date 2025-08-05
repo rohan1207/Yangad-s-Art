@@ -27,7 +27,8 @@ const corsOptions = {
     'http://localhost:5175',    // Alternative local port
       // Alternative local port  
             // Alternative local port
-    'https://yangad-s-art-gallery.onrender.com',  // Production frontend
+    'https://yangad-s-art-gallery.onrender.com',
+    'https://admin-yangad-s-art-gallery.onrender.com',  // Production frontend
            
   ],
   credentials: true,
