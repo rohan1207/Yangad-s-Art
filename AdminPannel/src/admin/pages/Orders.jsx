@@ -11,24 +11,7 @@ const Orders = () => {
   const loadOrders = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("adminToken");
-      const API_BASE =
-        import.meta.env.VITE_API_URL || "https://yangart-api.onrender.com/api";
-      const res = await fetch(`${API_BASE}/orders`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-
-      if (!res.ok) {
-        const errorData = await res
-          .json()
-          .catch(() => ({ message: res.statusText }));
-        throw new Error(errorData.message || "Failed to fetch orders");
-      }
-
-      const data = await res.json();
+      const data = await apiFetch('/orders');
       setOrders(data);
     } catch (err) {
       setError(err.message);
