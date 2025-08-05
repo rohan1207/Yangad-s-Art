@@ -17,10 +17,10 @@ const App = () => (
   <Router>
     <Routes>
       {/* Public site */}
-      <Route path="/" element={<Home />} />
+      {/* <Route path="/" element={<Home />} /> */}
 
       {/* Admin auth */}
-      <Route path="/admin/login" element={<Login />} />
+      <Route path="/" element={<Login />} />
 
       {/* Admin protected routes */}
       <Route
