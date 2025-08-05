@@ -12,7 +12,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      const data = await apiFetch('/admin/login', {
+      const data = await apiFetch('/api/admin/login', {
         method: 'POST',
         body: JSON.stringify({ username, password }),
       });
