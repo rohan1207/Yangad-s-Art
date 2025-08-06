@@ -8,7 +8,7 @@ export const apiFetch = async (endpoint, options = {}) => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
-  const url = new URL(endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`, API_BASE);
+  const url = new URL(endpoint.startsWith('/') ? endpoint : `/${endpoint}`, API_BASE);
   const res = await fetch(url.href, { ...options, headers });
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }));
