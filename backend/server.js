@@ -43,11 +43,11 @@ app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 // Routes
-app.use('/api/users', userRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/offers', offerRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/analytics', analyticsRoutes);
+app.use('/users', userRoutes);
+app.use('/admin', adminRoutes);
+app.use('/offers', offerRoutes);  
+app.use('/orders', orderRoutes);
+app.use('/analytics', analyticsRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
