@@ -1,4 +1,5 @@
 import express from 'express';
+import productRoutes from './routes/productRoutes.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -37,11 +38,11 @@ const corsOptions = {
   exposedHeaders: ['Content-Range', 'X-Content-Range']
 };
 app.use(cors(corsOptions));
+app.use('/products', productRoutes);
 app.use(express.json()); // for parsing application/json
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 // Routes
-app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/offers', offerRoutes);
