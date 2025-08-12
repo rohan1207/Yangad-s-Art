@@ -12,7 +12,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      const data = await apiFetch('/api/admin/login', {
+      const data = await apiFetch('/admin/login', {
         method: 'POST',
         body: JSON.stringify({ username, password }),
       });
@@ -54,7 +54,7 @@ const Login = () => {
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+          className="w-full bg-amber-500 text-white py-2 rounded-md hover:bg-amber-600"
         >
           Login
         </button>
